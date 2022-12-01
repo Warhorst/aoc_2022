@@ -13,7 +13,9 @@ pub fn solve_p1() {
 
     calories.sort_by(|cal_one, cal_two| cal_two.cmp(&cal_one));
 
+    println!("Solution 1: {}", calories[0]);
+
     let sum_top_three = calories.into_iter().take(3).sum::<usize>();
 
-    println!("{:?}", sum_top_three)
+    println!("Solution 2: {}", sum_top_three)
 }
