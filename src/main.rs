@@ -1,7 +1,7 @@
-use crate::r1::solve_r1;
+use crate::p1::solve_p1;
 
-mod r1;
+mod p1;
 
 fn main() {
-    solve_r1()
+    solve_p1()
 }
