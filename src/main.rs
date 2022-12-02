@@ -7,6 +7,8 @@ mod p2;
 fn main() {
     let day = 2;
 
+    println!("Day {day}");
+
     match day {
         1 => solve_p1(),
         2 => solve_p2(),
