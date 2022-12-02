@@ -1,7 +1,7 @@
-use std::fs;
+use std::fs::read_to_string;
 
 pub fn solve_p1() {
-    let input = fs::read_to_string("./p1_input.txt").unwrap();
+    let input = read_to_string("./p1_input.txt").unwrap();
 
     let mut calories = input
         .split("\r\n\r\n")
