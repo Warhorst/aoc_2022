@@ -1,9 +1,9 @@
-use std::fs::read_to_string;
 use Hand::*;
 use Strategy::*;
+use crate::input_reader::read_input;
 
 pub fn solve_p2() {
-    let input = read_to_string("./p2_input.txt").unwrap();
+    let input = read_input(2);
 
     let score_one = input.lines()
         .map(|line| {
