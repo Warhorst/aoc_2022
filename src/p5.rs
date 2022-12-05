@@ -87,19 +87,18 @@ impl From<&str> for Stacks {
         input.lines()
             .rev()
             .skip(1)
-            .for_each(|line| {
-                line.replace("[", "")
-                    .replace("]", "")
-                    .replace("    ", "?")
-                    .replace(" ", "")
-                    .chars()
-                    .enumerate()
-                    .filter_map(|(i, c)| match c {
-                        '?' => None,
-                        _ => Some((i + 1, c))
-                    })
-                    .for_each(|(i, c)| stacks.insert(i, c))
-            });
+            .for_each(|line| line.replace("[", "")
+                .replace("]", "")
+                .replace("    ", "?")
+                .replace(" ", "")
+                .chars()
+                .enumerate()
+                .filter_map(|(i, c)| match c {
+                    '?' => None,
+                    _ => Some((i + 1, c))
+                })
+                .for_each(|(i, c)| stacks.insert(i, c))
+            );
 
         stacks
     }
