@@ -3,6 +3,7 @@ use crate::p2::solve_p2;
 use crate::p3::solve_p3;
 use crate::p4::solve_p4;
 use crate::p5::solve_p5;
+use crate::p6::solve_p6;
 
 mod input_reader;
 mod p1;
@@ -10,9 +11,10 @@ mod p2;
 mod p3;
 mod p4;
 mod p5;
+mod p6;
 
 fn main() {
-    let day = 5;
+    let day = 6;
 
     println!("Day {day}");
 
@@ -22,6 +24,7 @@ fn main() {
         3 => solve_p3(),
         4 => solve_p4(),
         5 => solve_p5(),
+        6 => solve_p6(),
         _ => println!("error")
     }
 }
