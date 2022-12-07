@@ -58,7 +58,7 @@ impl StateMachine {
     fn get_current_dir_content(&mut self) -> &mut DirectoryContent {
         let current = self.create_current_path();
 
-        match self.directory_contents.entry(current.clone()) {
+        match self.directory_contents.entry(current) {
             Entry::Occupied(o) => o.into_mut(),
             Entry::Vacant(v) => v.insert(DirectoryContent::new())
         }
