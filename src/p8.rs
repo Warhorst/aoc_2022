@@ -29,7 +29,7 @@ impl Board {
     fn position_is_visible(&self, pos: &Position) -> bool {
         let height = self.get_height(pos);
 
-        pos.neighbours_new(self)
+        pos.neighbours(self)
             .into_iter()
             .any(|neighbours| match neighbours {
                 None => true,
@@ -50,7 +50,7 @@ impl Board {
     fn get_scenic_score(&self, pos: &Position) -> usize {
         let height = self.get_height(pos);
 
-        pos.neighbours_new(self)
+        pos.neighbours(self)
             .into_iter()
             .map(|neighbours| match neighbours {
                 None => 0,
@@ -97,7 +97,7 @@ impl Position {
         Self { x, y }
     }
 
-    fn neighbours_new(&self, board: &Board) -> [Option<Vec<Position>>; 4] {
+    fn neighbours(&self, board: &Board) -> [Option<Vec<Position>>; 4] {
         [
             self.get_left(board),
             self.get_right(board),
