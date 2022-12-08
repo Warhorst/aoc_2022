@@ -91,7 +91,7 @@ impl From<&str> for Board {
     }
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 struct Position {
     x: isize,
     y: isize,
@@ -108,21 +108,137 @@ impl Position {
         [
             match self.x {
                 0 => None,
-                _ => Some((0..self.x).map(|x| Position::new(x, self.y)).rev().collect())
+                _ => Some(LeftPositions::new(*self).collect())
             },
             match self.x {
                 x if x == width - 1 => None,
-                _ => Some(((self.x + 1)..width).map(|x| Position::new(x, self.y)).collect()),
+                _ => Some(RightPositions::new(*self, board_width).collect()),
             },
             match self.y {
                 0 => None,
-                _ => Some((0..self.y).map(|y| Position::new(self.x, y)).rev().collect())
+                _ => Some(UpPositions::new(*self).collect())
             },
             match self.y {
                 y if y == height - 1 => None,
-                _ => Some(((self.y + 1)..height).map(|y| Position::new(self.x, y)).collect())
+                _ => Some(DownPositions::new(*self, board_height).collect())
             }
         ]
+    }
+}
+
+struct LeftPositions {
+    current_x: isize,
+    start: Position,
+}
+
+impl LeftPositions {
+    pub fn new(start: Position) -> Self {
+        Self {
+            current_x: start.x - 1,
+            start,
+        }
+    }
+}
+
+impl Iterator for LeftPositions {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_x < 0 {
+            None
+        } else {
+            let res = Position::new(self.current_x, self.start.y);
+            self.current_x -= 1;
+            Some(res)
+        }
+    }
+}
+
+struct RightPositions {
+    current_x: isize,
+    start: Position,
+    width: usize,
+}
+
+impl RightPositions {
+    pub fn new(start: Position, width: usize) -> Self {
+        Self {
+            current_x: start.x + 1,
+            start,
+            width,
+        }
+    }
+}
+
+impl Iterator for RightPositions {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_x == self.width as isize {
+            None
+        } else {
+            let res = Position::new(self.current_x, self.start.y);
+            self.current_x += 1;
+            Some(res)
+        }
+    }
+}
+
+struct UpPositions {
+    current_y: isize,
+    start: Position,
+}
+
+impl UpPositions {
+    pub fn new(start: Position) -> Self {
+        Self {
+            current_y: start.y - 1,
+            start
+        }
+    }
+}
+
+impl Iterator for UpPositions {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_y < 0 {
+            None
+        } else {
+            let res = Position::new(self.start.x, self.current_y);
+            self.current_y -= 1;
+            Some(res)
+        }
+    }
+}
+
+struct DownPositions {
+    current_y: isize,
+    start: Position,
+    height: usize,
+}
+
+impl DownPositions {
+    pub fn new(start: Position, height: usize) -> Self {
+        Self {
+            current_y: start.y + 1,
+            start,
+            height
+        }
+    }
+}
+
+impl Iterator for DownPositions {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_y == self.height as isize {
+            None
+        } else {
+            let res = Position::new(self.start.x, self.current_y);
+            self.current_y += 1;
+            Some(res)
+        }
     }
 }
 
