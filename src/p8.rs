@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::input_reader::read_input;
+use crate::p8::Direction::{Down, Left, Right, Up};
 
 pub fn solve_p8() {
     let input = read_input(8);
@@ -14,8 +15,6 @@ pub fn solve_p8() {
 
 #[derive(Debug)]
 struct Board {
-    width: usize,
-    height: usize,
     heights: HashMap<Position, usize>,
 }
 
@@ -30,7 +29,7 @@ impl Board {
     fn position_is_visible(&self, pos: &Position) -> bool {
         let height = self.get_height(pos);
 
-        pos.neighbours(self.width, self.height)
+        pos.neighbours_new(self)
             .into_iter()
             .any(|neighbours| match neighbours {
                 None => true,
@@ -51,7 +50,7 @@ impl Board {
     fn get_scenic_score(&self, pos: &Position) -> usize {
         let height = self.get_height(pos);
 
-        pos.neighbours(self.width, self.height)
+        pos.neighbours_new(self)
             .into_iter()
             .map(|neighbours| match neighbours {
                 None => 0,
@@ -72,8 +71,6 @@ impl Board {
 
 impl From<&str> for Board {
     fn from(s: &str) -> Self {
-        let height = s.lines().count();
-        let width = s.lines().next().expect("should have one line").len();
         let heights = s.lines()
             .enumerate()
             .flat_map(|(y, line)| line
@@ -84,8 +81,6 @@ impl From<&str> for Board {
             .collect();
 
         Board {
-            width,
-            height,
             heights,
         }
     }
@@ -102,144 +97,77 @@ impl Position {
         Self { x, y }
     }
 
-    fn neighbours(&self, board_width: usize, board_height: usize) -> [Option<Vec<Position>>; 4] {
-        let (width, height) = (board_width as isize, board_height as isize);
-
+    fn neighbours_new(&self, board: &Board) -> [Option<Vec<Position>>; 4] {
         [
-            match self.x {
-                0 => None,
-                _ => Some(LeftPositions::new(*self).collect())
-            },
-            match self.x {
-                x if x == width - 1 => None,
-                _ => Some(RightPositions::new(*self, board_width).collect()),
-            },
-            match self.y {
-                0 => None,
-                _ => Some(UpPositions::new(*self).collect())
-            },
-            match self.y {
-                y if y == height - 1 => None,
-                _ => Some(DownPositions::new(*self, board_height).collect())
-            }
+            self.get_left(board),
+            self.get_right(board),
+            self.get_up(board),
+            self.get_down(board),
         ]
     }
-}
 
-struct LeftPositions {
-    current_x: isize,
-    start: Position,
-}
+    fn get_left(&self, board: &Board) -> Option<Vec<Position>> {
+        Some(PositionsInDirection::new(*self, board, Left)?.collect())
+    }
 
-impl LeftPositions {
-    pub fn new(start: Position) -> Self {
-        Self {
-            current_x: start.x - 1,
-            start,
-        }
+    fn get_right(&self, board: &Board) -> Option<Vec<Position>> {
+        Some(PositionsInDirection::new(*self, board, Right)?.collect())
+    }
+
+    fn get_up(&self, board: &Board) -> Option<Vec<Position>> {
+        Some(PositionsInDirection::new(*self, board, Up)?.collect())
+    }
+
+    fn get_down(&self, board: &Board) -> Option<Vec<Position>> {
+        Some(PositionsInDirection::new(*self, board, Down)?.collect())
     }
 }
 
-impl Iterator for LeftPositions {
+struct PositionsInDirection<'a> {
+    current: Position,
+    board: &'a Board,
+    direction: Direction
+}
+
+impl<'a> PositionsInDirection<'a> {
+    pub fn new(start: Position, board: &'a Board, direction: Direction) -> Option<Self> {
+        if !board.heights.contains_key(&start) {
+            return None
+        }
+
+        Some(Self {
+            current: start,
+            board,
+            direction
+        })
+    }
+}
+
+impl<'a> Iterator for PositionsInDirection<'a> {
     type Item = Position;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_x < 0 {
-            None
-        } else {
-            let res = Position::new(self.current_x, self.start.y);
-            self.current_x -= 1;
-            Some(res)
+        let (x, y) = (self.current.x, self.current.y);
+
+        self.current = match self.direction {
+            Up => Position::new(x, y - 1),
+            Down => Position::new(x, y + 1),
+            Left => Position::new(x - 1, y),
+            Right => Position::new(x + 1, y)
+        };
+
+        match self.board.heights.contains_key(&self.current) {
+            true => Some(self.current),
+            false => None
         }
     }
 }
 
-struct RightPositions {
-    current_x: isize,
-    start: Position,
-    width: usize,
-}
-
-impl RightPositions {
-    pub fn new(start: Position, width: usize) -> Self {
-        Self {
-            current_x: start.x + 1,
-            start,
-            width,
-        }
-    }
-}
-
-impl Iterator for RightPositions {
-    type Item = Position;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current_x == self.width as isize {
-            None
-        } else {
-            let res = Position::new(self.current_x, self.start.y);
-            self.current_x += 1;
-            Some(res)
-        }
-    }
-}
-
-struct UpPositions {
-    current_y: isize,
-    start: Position,
-}
-
-impl UpPositions {
-    pub fn new(start: Position) -> Self {
-        Self {
-            current_y: start.y - 1,
-            start
-        }
-    }
-}
-
-impl Iterator for UpPositions {
-    type Item = Position;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current_y < 0 {
-            None
-        } else {
-            let res = Position::new(self.start.x, self.current_y);
-            self.current_y -= 1;
-            Some(res)
-        }
-    }
-}
-
-struct DownPositions {
-    current_y: isize,
-    start: Position,
-    height: usize,
-}
-
-impl DownPositions {
-    pub fn new(start: Position, height: usize) -> Self {
-        Self {
-            current_y: start.y + 1,
-            start,
-            height
-        }
-    }
-}
-
-impl Iterator for DownPositions {
-    type Item = Position;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current_y == self.height as isize {
-            None
-        } else {
-            let res = Position::new(self.start.x, self.current_y);
-            self.current_y += 1;
-            Some(res)
-        }
-    }
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right
 }
 
 #[cfg(test)]
@@ -255,8 +183,6 @@ mod tests {
 35390";
 
         let board = Board::from(input);
-        assert_eq!(board.width, 5);
-        assert_eq!(board.height, 5);
         println!("{:?}", board)
     }
 
