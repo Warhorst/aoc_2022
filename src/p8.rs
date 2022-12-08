@@ -31,12 +31,7 @@ impl Board {
 
         pos.neighbours(self)
             .into_iter()
-            .any(|neighbours| match neighbours {
-                None => true,
-                Some(neighbours) => neighbours
-                    .into_iter()
-                    .all(|n| self.get_height(&n) < height)
-            })
+            .any(|neighbours| neighbours.into_iter().all(|n| self.get_height(&n) < height))
     }
 
     fn get_highest_scenic_score(&self) -> usize {
@@ -52,13 +47,11 @@ impl Board {
 
         pos.neighbours(self)
             .into_iter()
-            .map(|neighbours| match neighbours {
-                None => 0,
-                Some(neighbours) => {
-                    match neighbours.iter().take_while(|n| self.get_height(&n) < height).count() {
-                        c if c < neighbours.len() => c + 1,
-                        c => c
-                    }
+            .map(|neighbours| {
+                let neighbours = neighbours.collect::<Vec<_>>();
+                match neighbours.iter().take_while(|n| self.get_height(&n) < height).count() {
+                    c if c < neighbours.len() => c + 1,
+                    c => c
                 }
             })
             .product()
@@ -97,49 +90,29 @@ impl Position {
         Self { x, y }
     }
 
-    fn neighbours(&self, board: &Board) -> [Option<Vec<Position>>; 4] {
+    fn neighbours<'a>(&self, board: &'a Board) -> [PositionsInDirection<'a>; 4] {
         [
-            self.get_left(board),
-            self.get_right(board),
-            self.get_up(board),
-            self.get_down(board),
+            PositionsInDirection::new(*self, board, Left),
+            PositionsInDirection::new(*self, board, Right),
+            PositionsInDirection::new(*self, board, Up),
+            PositionsInDirection::new(*self, board, Down),
         ]
-    }
-
-    fn get_left(&self, board: &Board) -> Option<Vec<Position>> {
-        Some(PositionsInDirection::new(*self, board, Left)?.collect())
-    }
-
-    fn get_right(&self, board: &Board) -> Option<Vec<Position>> {
-        Some(PositionsInDirection::new(*self, board, Right)?.collect())
-    }
-
-    fn get_up(&self, board: &Board) -> Option<Vec<Position>> {
-        Some(PositionsInDirection::new(*self, board, Up)?.collect())
-    }
-
-    fn get_down(&self, board: &Board) -> Option<Vec<Position>> {
-        Some(PositionsInDirection::new(*self, board, Down)?.collect())
     }
 }
 
 struct PositionsInDirection<'a> {
     current: Position,
     board: &'a Board,
-    direction: Direction
+    direction: Direction,
 }
 
 impl<'a> PositionsInDirection<'a> {
-    pub fn new(start: Position, board: &'a Board, direction: Direction) -> Option<Self> {
-        if !board.heights.contains_key(&start) {
-            return None
-        }
-
-        Some(Self {
+    pub fn new(start: Position, board: &'a Board, direction: Direction) -> Self {
+        Self {
             current: start,
             board,
-            direction
-        })
+            direction,
+        }
     }
 }
 
@@ -167,7 +140,7 @@ enum Direction {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
 
 #[cfg(test)]
