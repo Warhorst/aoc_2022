@@ -1,73 +1,31 @@
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::fmt::Formatter;
 use crate::input_reader::read_input;
 use Direction::*;
 
 pub fn solve_p9() {
     let input = read_input(9);
-    let mut board = Board::new();
+
+    let mut board = Board::<2>::new();
     board.process_all_steps(input.lines().map(Steps::from));
-
     let num_visited_tail_positions = board.num_tail_visited_positions();
-    print!("Solution 1: {num_visited_tail_positions}");
+    println!("Solution 1: {num_visited_tail_positions}");
 
-    let mut board_ext = BoardExtended::new();
-    board_ext.process_all_steps(input.lines().map(Steps::from));
-
-    let num_visited_tail_positions = board_ext.num_tail_visited_positions();
-    print!("Solution 2: {num_visited_tail_positions}");
+    let mut board = Board::<10>::new();
+    board.process_all_steps(input.lines().map(Steps::from));
+    let num_visited_tail_positions = board.num_tail_visited_positions();
+    println!("Solution 2: {num_visited_tail_positions}");
 }
 
-struct Board {
-    head_position: Position,
-    tail_position: Position,
-    tail_visited_positions: HashSet<Position>,
-}
-
-impl Board {
-    fn new() -> Self {
-        Board {
-            head_position: Position::new(0, 0),
-            tail_position: Position::new(0, 0),
-            tail_visited_positions: [Position::new(0, 0)].into_iter().collect(),
-        }
-    }
-
-    fn process_all_steps(&mut self, steps: impl IntoIterator<Item=Steps>) {
-        steps.into_iter().for_each(|steps| self.process_steps(steps))
-    }
-
-    fn process_steps(&mut self, steps: Steps) {
-        let dir = steps.direction;
-
-        for _ in 0..steps.amount {
-            self.head_position = self.head_position.position_in_direction(dir);
-
-            if !self.tail_position.neighboured_with(&self.head_position) {
-                self.tail_position = match dir {
-                    Left | Right => Position::new(self.tail_position.x, self.head_position.y).position_in_direction(dir),
-                    Up | Down => Position::new(self.head_position.x, self.tail_position.y).position_in_direction(dir),
-                };
-                self.tail_visited_positions.insert(self.tail_position);
-            }
-        }
-    }
-
-    fn num_tail_visited_positions(&self) -> usize {
-        self.tail_visited_positions.len()
-    }
-}
-
-struct BoardExtended {
+struct Board<const C: usize> {
     rope: Vec<Position>,
     tail_visited_positions: HashSet<Position>,
 }
 
-impl BoardExtended {
+impl<const C: usize> Board<C> {
     fn new() -> Self {
-        BoardExtended {
-            rope: vec![Position::new(0, 0); 10],
+        Board {
+            rope: vec![Position::new(0, 0); C],
             tail_visited_positions: [Position::new(0, 0)].into_iter().collect(),
         }
     }
@@ -82,20 +40,19 @@ impl BoardExtended {
         for _ in 0..steps.amount {
             self.rope[0] = self.rope[0].position_in_direction(dir);
             self.update_rope();
-            self.tail_visited_positions.insert(self.rope[9]);
+            self.tail_visited_positions.insert(self.rope[C - 1]);
         }
     }
 
     fn update_rope(&mut self) {
-        for i in 1..self.rope.len() {
+        for i in 1..C {
             let previous = self.rope[i - 1];
             let current = self.rope[i];
 
             if !current.neighboured_with(&previous) {
-                let mut new_current = current;
-                current.directions_relative_to(&previous)
+                let new_current = current.directions_relative_to(&previous)
                     .into_iter()
-                    .for_each(|dir| new_current = new_current.position_in_direction(dir));
+                    .fold(current, |curr, dir| curr.position_in_direction(dir));
 
                 self.rope[i] = new_current
             }
@@ -153,12 +110,6 @@ impl Position {
     }
 }
 
-impl std::fmt::Display for Position {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
-    }
-}
-
 struct Steps {
     direction: Direction,
     amount: usize,
@@ -197,7 +148,7 @@ impl From<&str> for Direction {
 
 #[cfg(test)]
 mod tests {
-    use crate::p9::{Board, BoardExtended, Steps};
+    use crate::p9::{Board, Steps};
 
     #[test]
     fn examples_work() {
@@ -210,7 +161,7 @@ D 1
 L 5
 R 2";
 
-        let mut board = Board::new();
+        let mut board = Board::<2>::new();
         board.process_all_steps(input_one.lines().map(Steps::from));
         assert_eq!(board.num_tail_visited_positions(), 13);
 
@@ -223,8 +174,8 @@ D 10
 L 25
 U 20";
 
-        let mut ext_board = BoardExtended::new();
-        ext_board.process_all_steps(input_two.lines().map(Steps::from));
-        assert_eq!(ext_board.num_tail_visited_positions(), 36);
+        let mut board = Board::<10>::new();
+        board.process_all_steps(input_two.lines().map(Steps::from));
+        assert_eq!(board.num_tail_visited_positions(), 36);
     }
 }
