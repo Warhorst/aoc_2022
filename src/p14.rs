@@ -27,22 +27,19 @@ struct Board {
 
 impl Board {
     fn run_sand(&mut self) -> usize {
-        let mut sand_pos = self.spawn_sand().expect("first sand should be spawnable");
+        let mut sand_pos = self.sand_spawn();
         let mut fallen_sand = 0;
 
         loop {
             match self.get_next_position(sand_pos) {
-                Fallen(new_pos) => {
-                    self.fields.remove(&sand_pos);
-                    self.fields.insert(new_pos, Sand);
-                    sand_pos = new_pos;
-                }
+                Fallen(new_pos) => sand_pos = new_pos,
                 Calm => {
                     fallen_sand += 1;
+                    self.fields.insert(sand_pos, Sand);
 
-                    match self.spawn_sand() {
-                        None => return fallen_sand,
-                        Some(pos) => sand_pos = pos
+                    match self.fields.get(&self.sand_spawn()) {
+                        Some(_) => return fallen_sand,
+                        None => sand_pos = self.sand_spawn()
                     }
                 }
                 FallToBottom => return fallen_sand
@@ -50,21 +47,13 @@ impl Board {
         }
     }
 
-    fn spawn_sand(&mut self) -> Option<Position> {
-        let pos = Position::new(500, 0);
-
-        match self.fields.contains_key(&pos) {
-            true => None,
-            false => {
-                self.fields.insert(pos, Sand);
-                Some(pos)
-            }
-        }
+    fn sand_spawn(&self) -> Position {
+        Position::new(500, 0)
     }
 
     fn get_next_position(&self, sand_pos: Position) -> SandUpdate {
         // A bit confusing. 'Up' means 'to the higher y pos'. Maybe I should rename this to something more general.
-        let max_y = self.fields.keys().map(|pos| pos.y).max().unwrap() as isize;
+        let max_y = self.height - 1;
         let pos_down = sand_pos.position_in_direction(Up);
 
         if let None = self.fields.get(&pos_down) {
@@ -110,7 +99,7 @@ enum SandUpdate {
 
 impl From<&str> for Board {
     fn from(input: &str) -> Self {
-        let mut fields = HashMap::new();
+        let mut fields = HashMap::with_capacity(1000 * 200);
 
         input
             .lines()
