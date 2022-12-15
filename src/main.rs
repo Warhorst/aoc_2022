@@ -5,6 +5,7 @@ use crate::p11::solve_p11;
 use crate::p12::solve_p12;
 use crate::p13::solve_p13;
 use crate::p14::solve_p14;
+use crate::p15::solve_p15;
 use crate::p1::solve_p1;
 use crate::p2::solve_p2;
 use crate::p3::solve_p3;
@@ -30,9 +31,10 @@ mod p11;
 mod p12;
 mod p13;
 mod p14;
+mod p15;
 
 fn main() {
-    let day = 14;
+    let day = 15;
 
     println!("Day {day}");
 
@@ -51,6 +53,7 @@ fn main() {
         12 => solve_p12(),
         13 => solve_p13(),
         14 => solve_p14(),
+        15 => solve_p15(),
         _ => println!("error")
     }
 }
