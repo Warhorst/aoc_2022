@@ -1,3 +1,4 @@
+use std::convert::identity;
 use pad::Direction::{Down, Left, Right, Up};
 use pad::Position;
 use crate::input_reader::read_input;
@@ -107,7 +108,7 @@ impl SensorBeacon {
 
                 [Some(left), Some(right), None]
             })
-            .flat_map(|opt| opt)
+            .flat_map(identity)
     }
 }
 
