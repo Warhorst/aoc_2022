@@ -6,6 +6,7 @@ pub fn solve_p16() {
     let mut runner = Runner::from(input.as_str());
     runner.run();
 
+    // Output seems to be random
     println!("Solution 1: {}", runner.flown);
 }
 
