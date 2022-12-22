@@ -11,6 +11,8 @@ pub fn solve_p17() {
 
     println!("Solution 1: {}", runner.max_y());
 
+    // Find patterns that repeat and than get height
+    // See https://www.reddit.com/r/adventofcode/comments/zo3vbe/2022_day_17_finding_a_pattern/
     // let mut runner = Runner::from(input.as_str());
     // runner.run(2022);
 }
